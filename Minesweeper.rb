@@ -26,23 +26,26 @@ class Tile
   end
 
   def reveal(visited=[])
-
+    self.revealed = true
     self.bombed = self.bomb
 
     unless bombed?
-      self.revealed = true
       neighbors_to_visit = neighbors.select do |neighbor|
-        !self.board[neighbor].is_bomb?
+        neighbor = self.board[neighbor]
+        !neighbor.is_bomb? || !neighbor.flagged?
       end
 
       visited << self.pos
-      p neighbors_to_visit - visited
+      # p neighbors_to_visit - visited
       neighbors_to_visit = neighbors_to_visit - visited
       neighbors_to_visit.each do |neighbor|
         self.board[neighbor].reveal(visited) if neighbor_bomb_count == 0
       end
     end
+  end
 
+  def flag
+    self.flagged = !self.flagged
   end
 
   def neighbors
@@ -62,8 +65,6 @@ class Tile
   end
 
   def to_s
-    return "%".red if is_bomb?
-
     if flagged?
       "!".brown
     elsif revealed?
@@ -106,9 +107,8 @@ class Board
   end
 
   def won?
-    self.board_array.each_index do |row|
-      row.each_index do |col|
-        tile = self.board_array[row][col]
+    self.board_array.each do |row|
+      row.each do |tile|
         return false if tile.is_bomb? && !tile.flagged?
       end
     end
@@ -117,17 +117,16 @@ class Board
   end
 
   def lost?
-    self.board_array.each_index do |row|
-      row.each_index do |col|
-        tile = self.board_array[row][col]
-        return true if tile.reavealed? && tile.bombed?
+    self.board_array.each do |row|
+      row.each do |tile|
+        return true if tile.revealed? && tile.bombed?
       end
     end
 
     false
   end
 
-  def game_over
+  def game_over?
     won? || lost?
   end
 
@@ -137,23 +136,42 @@ class Game
   attr_accessor :board
 
   def initialize(board = Board.new)
-
+    self.board = board
   end
 
   def play
     until self.board.game_over?
-      get_move
+      render
+      command = get_move
+      p command
+      if command[0] == ?r
+        self.board[command[1]].reveal
+      elsif command[0] == ?f
+        self.board[command[1]].flag
+      end
     end
+
+    puts self.board.won? ? "U.S.A! U.S.A!" : "The Soviets Win"
+  end
+
+  def render
+    self.board.board_array.each {|row| puts row.to_s}
   end
 
   def get_move
-
+    puts "Hey, what's your deal?"
+    input = gets.chomp.to_s.split(",")
+    if input.count == 2
+      return [?r] << input.map(&:to_i)
+    elsif input[0].downcase == ?f
+      return [?f] << input[1..2].map(&:to_i)
+    end
   end
 end
-
-new_board = Board.new
-new_board.board_array.each {|row| puts row.to_s}
-new_board[[0,0]].reveal
-new_board.board_array.each {|row| puts row.to_s}
+#
+# new_board = Board.new
+# new_board.board_array.each {|row| puts row.to_s}
+# new_board[[0,0]].reveal
+# new_board.board_array.each {|row| puts row.to_s}
 
 Game.new.play
