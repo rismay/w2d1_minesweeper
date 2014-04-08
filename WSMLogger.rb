@@ -148,11 +148,11 @@ class String
 end
 
 
-# WSMLogger.logg_format = {log_style: :queue_format}
-#
-# def test
-#   WSMLogger.verbose "What's going on here."
-# end
-#
-# WSMLogger.error "What's going on here."
-# test
+# WSMLogger.log_format = {log_style: :queue_format}
+
+def test
+  WSMLogger.verbose "What's going on here."
+end
+
+WSMLogger.error "What's going on here."
+test

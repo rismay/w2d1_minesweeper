@@ -41,7 +41,6 @@ class Tile
       end
       if neighbor_bomb_count == 0 && !is_bomb?
         visited << self.pos
-        # p neighbors_to_visit - visited
         neighbors_to_visit = neighbors_to_visit - visited
         neighbors_to_visit.each do |neighbor|
           self.board[neighbor].reveal(visited)
@@ -75,13 +74,11 @@ class Tile
 
   def to_s
     if flagged?
-      #"!".brown
       "\u262E".encode('utf-8').green
     elsif revealed?
       return unicode = "\u262D".encode('utf-8').red if is_bomb?
 
-      bomb_count = neighbor_bomb_count #GOING TO GET CRAZY UP IN HERE
-      # "Bomb count: #{bomb_count}"
+      bomb_count = neighbor_bomb_count
       return bomb_count == 0 ? "\u268F".encode('utf-8').brown : bomb_count.to_s
     else
       "\u2698".encode('utf-8').cyan
@@ -109,7 +106,8 @@ class Board
 
   def init_board
     self.board_array.each_index do |row|
-      bomb_col = (0..self.size).to_a.sample(self.size/4) #set parameter in sample for bombs per Row!
+      #set parameter in sample for bombs per Row!
+      bomb_col = (0..self.size).to_a.sample(self.size/4)
       self.board_array.each_index do |col|
         new_tile = Tile.new(self, [row, col])
         new_tile.bomb = (bomb_col.include?(col))
@@ -178,7 +176,7 @@ class Game
   end
 
   def get_move
-    #Step 2: Get Continuous input
+    #Step 2: Get Continuous input... not input
     puts "Hey, what's your deal?"
     valid_input = false
     until valid_input
@@ -218,4 +216,4 @@ end
 # new_board[[0,0]].reveal
 # new_board.board_array.each {|row| puts row.to_s}
 
-Game.new(9).play
+Game.new(20).play
