@@ -47,9 +47,6 @@ class Tile
           self.board[neighbor].reveal(visited)
         end
       end
-    else
-      #bombed
-      puts "Whoa..."
     end
 
 
@@ -112,10 +109,10 @@ class Board
 
   def init_board
     self.board_array.each_index do |row|
-      bomb_col = (0..self.size).to_a.sample
+      bomb_col = (0..self.size).to_a.sample(self.size/4) #set parameter in sample for bombs per Row!
       self.board_array.each_index do |col|
         new_tile = Tile.new(self, [row, col])
-        new_tile.bomb = (col == bomb_col)
+        new_tile.bomb = (bomb_col.include?(col))
         self.board_array[row][col] = new_tile
       end
     end
@@ -166,13 +163,17 @@ class Game
         self.board[command[1]].flag
       end
     end
-
+    render(true)
     puts self.board.won? ? "U.S.A! U.S.A!" : "The Soviets Win"
   end
 
-  def render
-    #Step 1: Clear Buffer
+  def render(all=false)
     system('clear')
+    if all == true
+      self.board.board_array.flatten.each do |tile|
+        tile.reveal
+      end
+    end
     self.board.board_array.each {|row| puts row.join(" ").to_s}
   end
 
@@ -217,4 +218,4 @@ end
 # new_board[[0,0]].reveal
 # new_board.board_array.each {|row| puts row.to_s}
 
-Game.new(20).play
+Game.new(9).play
