@@ -1,7 +1,11 @@
 require './WSMLogger'
 
 class Tile
-  NEIGHBORS_SPOTS = [[-1,-1], [1,-1], [-1,1], [1,1], [0,-1], [-1,0], [0,1], [1,0]]
+  NEIGHBORS_SPOTS = [
+    [-1, -1], [1, -1], [-1, 1], [1, 1],
+    [0, -1], [-1, 0], [0, 1], [1, 0]
+  ]
+
   attr_accessor :bomb, :bombed, :revealed, :flagged, :board, :pos
 
   def initialize(board, pos)
@@ -25,24 +29,27 @@ class Tile
     @revealed ||= false
   end
 
-  def reveal(visited=[])
+  def reveal(visited = [])
     self.revealed = true
     self.bombed = self.bomb
 
-    unless bombed?
+    if !bombed?
       neighbors_to_visit = neighbors.select do |neighbor|
         neighbor = self.board[neighbor]
         !neighbor.is_bomb? || !neighbor.flagged?
       end
+    end
 
+    if neighbor_bomb_count == 0
       visited << self.pos
       # p neighbors_to_visit - visited
       neighbors_to_visit = neighbors_to_visit - visited
       neighbors_to_visit.each do |neighbor|
-        self.board[neighbor].reveal(visited) if neighbor_bomb_count == 0
+        self.board[neighbor].reveal(visited)
       end
     end
   end
+
 
   def flag
     self.flagged = !self.flagged
@@ -54,13 +61,14 @@ class Tile
     end
 
     possible_neighbors.select do |neighbor|
-      neighbor[0].between?(0,self.board.size-1) && neighbor[1].between?(0,self.board.size-1)
+      neighbor[0].between?(0, self.board.size - 1) &&
+      neighbor[1].between?(0, self.board.size - 1)
     end
   end
 
   def neighbor_bomb_count
     neighbors.inject(0) do |acc, pos|
-      acc += self.board[pos].is_bomb? ? 1 : 0
+      self.board[pos].is_bomb? ? acc + 1 : acc
     end
   end
 
@@ -100,27 +108,23 @@ class Board
       bomb_col = (0..self.size).to_a.sample
       self.board_array.each_index do |col|
         new_tile = Tile.new(self, [row, col])
-        new_tile.bomb = true if col == bomb_col
+        new_tile.bomb = (col == bomb_col)
         self.board_array[row][col] = new_tile
       end
     end
   end
 
   def won?
-    self.board_array.each do |row|
-      row.each do |tile|
-        return false if tile.is_bomb? && !tile.flagged?
-      end
+    self.board_array.flatten.each do |tile|
+      return false if tile.is_bomb? && !tile.flagged?
     end
 
     true
   end
 
   def lost?
-    self.board_array.each do |row|
-      row.each do |tile|
-        return true if tile.revealed? && tile.bombed?
-      end
+    self.board_array.flatten.each do |tile|
+      return true if tile.revealed? && tile.bombed?
     end
 
     false
@@ -135,15 +139,15 @@ end
 class Game
   attr_accessor :board
 
-  def initialize(board = Board.new)
-    self.board = board
+  def initialize(board_size = 9)
+    self.board = Board.new(board_size)
   end
 
   def play
     until self.board.game_over?
       render
+
       command = get_move
-      p command
       if command[0] == ?r
         self.board[command[1]].reveal
       elsif command[0] == ?f
@@ -155,23 +159,37 @@ class Game
   end
 
   def render
+    #Step 1: Clear Buffer
+    system('clear')
     self.board.board_array.each {|row| puts row.to_s}
   end
 
   def get_move
+    #Step 2: Get Continuous input
     puts "Hey, what's your deal?"
-    input = gets.chomp.to_s.split(",")
+    valid_input = false
+    until valid_input
+      input = gets.chomp.to_s.split(",")
+      valid_input = input.count.between?(2,3)
+    end
+
     if input.count == 2
       return [?r] << input.map(&:to_i)
     elsif input[0].downcase == ?f
       return [?f] << input[1..2].map(&:to_i)
     end
   end
+
+  # def get_jeff
+  #   key = get_input
+  #   if key == up
+  #       cursor_loc_y -= 1
+  # end
 end
-#
+
 # new_board = Board.new
 # new_board.board_array.each {|row| puts row.to_s}
 # new_board[[0,0]].reveal
 # new_board.board_array.each {|row| puts row.to_s}
 
-Game.new.play
+Game.new(20).play
