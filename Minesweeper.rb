@@ -1,4 +1,5 @@
 require './WSMLogger'
+require 'yaml'
 
 class Tile
   NEIGHBORS_SPOTS = [
@@ -49,7 +50,6 @@ class Tile
       end
     end
   end
-
 
   def flag
     self.flagged = !self.flagged
@@ -148,7 +148,12 @@ class Game
       render
 
       command = get_move
-      if command[0] == ?r
+      if command[0] == ?l
+        load_file
+      elsif command[0] == ?s
+        save_to_yaml
+        break
+      elsif command[0] == ?r
         self.board[command[1]].reveal
       elsif command[0] == ?f
         self.board[command[1]].flag
@@ -170,9 +175,9 @@ class Game
     valid_input = false
     until valid_input
       input = gets.chomp.to_s.split(",")
+      return input if input[0] == ?s || input[0] == ?l
       valid_input = input.count.between?(2,3)
     end
-
     if input.count == 2
       return [?r] << input.map(&:to_i)
     elsif input[0].downcase == ?f
@@ -180,6 +185,18 @@ class Game
     end
   end
 
+  def save_to_yaml
+    puts "What would you like to call your file, Mr. Putin: "
+    file_name = gets.chomp
+    yaml_object = self.board.to_yaml
+    File.open("#{file_name}","w") {|f| f.write yaml_object }
+  end
+
+  def load_file
+    puts "Enter the name of the file, Mr. Putin: "
+    self.board = YAML::load_file(gets.chomp)
+    self.play
+  end
   # def get_jeff
   #   key = get_input
   #   if key == up
