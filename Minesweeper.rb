@@ -39,16 +39,20 @@ class Tile
         neighbor = self.board[neighbor]
         !neighbor.is_bomb? || !neighbor.flagged?
       end
+      if neighbor_bomb_count == 0 && !is_bomb?
+        visited << self.pos
+        # p neighbors_to_visit - visited
+        neighbors_to_visit = neighbors_to_visit - visited
+        neighbors_to_visit.each do |neighbor|
+          self.board[neighbor].reveal(visited)
+        end
+      end
+    else
+      #bombed
+      puts "Whoa..."
     end
 
-    if neighbor_bomb_count == 0
-      visited << self.pos
-      # p neighbors_to_visit - visited
-      neighbors_to_visit = neighbors_to_visit - visited
-      neighbors_to_visit.each do |neighbor|
-        self.board[neighbor].reveal(visited)
-      end
-    end
+
   end
 
   def flag
@@ -74,13 +78,16 @@ class Tile
 
   def to_s
     if flagged?
-      "!".brown
+      #"!".brown
+      "\u262E".encode('utf-8').green
     elsif revealed?
+      return unicode = "\u262D".encode('utf-8').red if is_bomb?
+
       bomb_count = neighbor_bomb_count #GOING TO GET CRAZY UP IN HERE
       # "Bomb count: #{bomb_count}"
-      return bomb_count == 0 ? "_" : bomb_count.to_s
+      return bomb_count == 0 ? "\u268F".encode('utf-8').brown : bomb_count.to_s
     else
-      "$"
+      "\u2698".encode('utf-8').cyan
     end
   end
 
@@ -166,7 +173,7 @@ class Game
   def render
     #Step 1: Clear Buffer
     system('clear')
-    self.board.board_array.each {|row| puts row.to_s}
+    self.board.board_array.each {|row| puts row.join(" ").to_s}
   end
 
   def get_move
@@ -197,6 +204,7 @@ class Game
     self.board = YAML::load_file(gets.chomp)
     self.play
   end
+
   # def get_jeff
   #   key = get_input
   #   if key == up
